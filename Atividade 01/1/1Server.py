@@ -1,6 +1,9 @@
 import socket
 import datetime
 from threading import Thread
+import os
+from shutil import copyfile
+
 
 i = 0
 clients = []
@@ -11,11 +14,25 @@ class Client:
         self.connection = connection
         self.addr = addr
 
-def getTime():
+def downloadFile(filename):
+    copyfile(os.getcwd()+"/"+filename, "./(copy)"+filename)
+
+def getPath():
+    return (str("Diretorio padrao download:"+str(os.getcwd())+"\n"+
+                "Total de arquivos: "+str(len(os.listdir()))+
+                "\n"+str(os.listdir())).encode())
+
+def getTimeDate(valor):
     now = datetime.datetime.now()
-    now = now.strftime("%H:%M:%S").encode()
-    print (now)
-    return (now)
+    hour = now.strftime("%H:%M:%S").encode()
+    date = now.strftime ("%d/%m/%Y").encode()
+    
+    # print (now)
+    if valor == True:
+        return (hour)
+    else:
+        return (date)
+ 
 
 def threadClient(c, addr):
     #recebe os dados
@@ -27,8 +44,17 @@ def threadClient(c, addr):
         for client in clients:
             if addr == client.addr:
                 if data.upper() == "TIME":
-                    time = getTime()
+                    time = getTimeDate(True)
                     c.connection.send(time)
+                elif data.upper() == "DATE":
+                    date = getTimeDate(False)
+                    c.connection.send(date)
+                elif data.upper() == "FILES":
+                    path = getPath()
+                    c.connection.send(path)
+                elif "DOWN" in data.upper():
+                    downloadFile(data[5:])
+                    c.connection.send(("Copiado").encode())
                 elif data.upper() == "EXIT":
                     print("Cliente "+ str(c.id)+ " saiu")
                     clients.remove(c)
