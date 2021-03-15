@@ -6,9 +6,9 @@ i = 0
 clients = []
 
 class Client:
-    def __init__(self, connected, addr):
+    def __init__(self, connection, addr):
         self.id = i
-        self.connected = connected
+        self.connection = connection
         self.addr = addr
 
 def getTime():
@@ -17,9 +17,27 @@ def getTime():
     print (now)
     return (now)
 
-def threadClient(s):
-    connected, addr = s.accept()
-    c = (Client(connected, addr))
+def threadClient(c, addr):
+    #recebe os dados
+    global clients
+    print("Cliente "+ str(c.id) +" conectado")
+    while True:
+        data = c.connection.recv(1024).decode()
+        print("Cliente "+ str(c.id)+ ":",  data)
+        for client in clients:
+            if addr == client.addr:
+                if data.upper() == "TIME":
+                    time = getTime()
+                    c.connection.send(time)
+                elif data.upper() == "EXIT":
+                    print("Cliente "+ str(c.id)+ " saiu")
+                    clients.remove(c)
+                    c.connection.close()
+                    break
+                
+def connectClient(s):
+    connection, addr = s.accept()
+    c = (Client(connection, addr))
     
     global clients
     clients.append(c)
@@ -27,19 +45,16 @@ def threadClient(s):
     global i 
     i += 1
     
-    print("Cliente "+ str(c.id) +" conectado")
+    tc = Thread(target= threadClient, args = [c, addr])
+    tc.start()
 
-    #recebe os dados
+
+def threadListen(s):
     while True:
-        data = c.connected.recv(1024).decode()
-        print("Cliente "+ str(c.id)+ ":",  data)
-        for client in clients:
-            if addr == client.addr:
-                if data.upper() == "TIME":
-                    time = getTime()
-                    c.connected.send(time)
-                elif data.upper() == "EXIT":
-                    break
+        s.listen()
+        connectClient(s)
+        # return (s)
+
                 
 def main():
     host = '127.0.0.1'
@@ -48,10 +63,11 @@ def main():
     s = socket.socket (socket.AF_INET, socket.SOCK_STREAM)
 
     s.bind((host,port))
-    s.listen()
     print("Esperando conexão do cliente")
-    c = Thread(target= threadClient, args = [s])
-    c.start()
+    ts = Thread(target=threadListen, args= [s])
+    ts.start()
+    # s = ts.join()
+    
     
     
 main()
