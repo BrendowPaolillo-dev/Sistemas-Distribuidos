@@ -15,7 +15,26 @@ class Client:
         self.addr = addr
 
 def downloadFile(filename):
-    copyfile(os.getcwd()+"/"+filename, "./(copy)"+filename)
+    # copyfile(os.getcwd()+"/"+filename, "./(copy)"+filename)
+    byte_list = []
+
+    with open(filename, "rb") as f:
+        if f:
+            while True:
+                byte = f.read(1)
+                if not byte:
+                    break
+                byte_list.append(byte)
+
+            f2 = open(filename + str(i), "wb")
+
+            for byte in byte_list:
+                f2.write(byte)
+
+            return os.stat(filename).st_size()
+        else:
+            return 0
+
 
 def getPath():
     return (str("Diretorio padrao download:"+str(os.getcwd())+"\n"+
@@ -27,7 +46,6 @@ def getTimeDate(valor):
     hour = now.strftime("%H:%M:%S").encode()
     date = now.strftime ("%d/%m/%Y").encode()
     
-    # print (now)
     if valor == True:
         return (hour)
     else:
@@ -53,8 +71,8 @@ def threadClient(c, addr):
                     path = getPath()
                     c.connection.send(path)
                 elif "DOWN" in data.upper():
-                    downloadFile(data[5:])
-                    c.connection.send(("Copiado").encode())
+                    mensagem = downloadFile(data[5:])
+                    c.connection.send((mensagem).encode())
                 elif data.upper() == "EXIT":
                     print("Cliente "+ str(c.id)+ " saiu")
                     clients.remove(c)
@@ -92,7 +110,6 @@ def main():
     print("Esperando conexão do cliente")
     ts = Thread(target=threadListen, args= [s])
     ts.start()
-    # s = ts.join()
     
     
     
