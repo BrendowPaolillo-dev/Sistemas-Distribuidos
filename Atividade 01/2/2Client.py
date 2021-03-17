@@ -7,12 +7,12 @@ def threadSender(s):
     while True: 
         stringOutput = []   
         stringInput = input("Comando: ")
-        print(stringInput)
         if stringInput[0:7].upper() == "ADDFILE":
             stringInput = stringInput [8:]
             size = getsizeof(stringInput)
-            stringOutput =  bytearray([str(1), str(1), str(size), stringInput], 'utf-8')
+            stringOutput =  bytearray(str(1) + str(1) + str(size) + stringInput, 'utf-8')
             
+            print(989898, stringInput)
             # stringOutput.append((size).to_bytes(1, byteorder="big"))
             # stringOutput = bytes(stringOutput)
             print (stringOutput)
