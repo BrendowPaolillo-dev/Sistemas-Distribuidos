@@ -11,7 +11,7 @@ def threadSender(s):
 def threadReceiver(s):
     while True:
         data = s.recv(1024).decode()
-        print ("servidor", data)
+        print ("Servidor:", data)
         if not data:
             break
 

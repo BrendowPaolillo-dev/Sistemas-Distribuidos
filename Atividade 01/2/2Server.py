@@ -1,8 +1,11 @@
 import socket
 from threading import Thread
+import os
+import sys
 
 i = 0
 clients = []
+files = []
 
 class Client:
     def __init__(self, connection, addr):
@@ -10,28 +13,61 @@ class Client:
         self.connection = connection
         self.addr = addr
 
+#método de addfile
+def addFile(data):
+    
+    files.append(data[0])
+    files.append(data[1])
+    pos = 2
+    counter = 3
+
+    while counter < len(data):
+        if (data[counter] == '\n'):
+            files.append(data[pos:counter])
+            counter += 1
+            pos = counter
+        counter+=1
+
+    dir_path = os.path.dirname(os.path.realpath(sys.argv[0]))
+
+    newF = open (dir_path+ "/"+ files[3], "w")
+    newF.write(files[5])
+    newF.close()
+
 
 def threadClient(c, addr):
     #recebe os dados
     global clients
+    global files
+
     print("Cliente "+ str(c.id) +" conectado")
     while True:
         data = c.connection.recv(1024).decode()
-        print("Cliente "+ str(c.id)+ ":",  data)
+        # print("Cliente "+ str(c.id)+ ":",  data)
+
         for client in clients:
             if addr == client.addr:
-                if data.upper() == "TIME":
-                    time = getTimeDate(True)
-                    c.connection.send(time)
-                elif data.upper() == "DATE":
-                    date = getTimeDate(False)
-                    c.connection.send(date)
-                elif data.upper() == "FILES":
-                    path = getPath()
-                    c.connection.send(path)
-                elif "DOWN" in data.upper():
-                    downloadFile(data[5:])
-                    c.connection.send(("Copiado").encode())
+
+                #método de addfile
+                if data [1] == "1":
+                    addFile(data)
+                    c.connection.send(("Arquivo adicionado").encode())
+                    print("Arquivo adicionado")
+
+
+                # if data.upper() == "TIME":
+                #     time = getTimeDate(True)
+                #     c.connection.send(time)
+                # elif data.upper() == "DATE":
+                #     date = getTimeDate(False)
+                #     c.connection.send(date)
+                # elif data.upper() == "FILES":
+                #     path = getPath()
+                #     c.connection.send(path)
+                # elif "DOWN" in data.upper():
+                #     downloadFile(data[5:])
+                #     c.connection.send(("Copiado").encode())
+
                 elif data.upper() == "EXIT":
                     print("Cliente "+ str(c.id)+ " saiu")
                     clients.remove(c)
