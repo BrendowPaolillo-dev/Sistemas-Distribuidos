@@ -29,10 +29,14 @@ def addFile(data):
         counter+=1
 
     dir_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-
-    newF = open (dir_path+ "/"+ files[3], "w")
-    newF.write(files[5])
-    newF.close()
+    try:
+        newF = open (dir_path+ "/"+ files[3], "w")
+        newF.write(files[5])
+        newF.close()
+        print("Arquivo adicionado")
+        return 1
+    except:
+        return 2
 
 
 def threadClient(c, addr):
@@ -50,9 +54,9 @@ def threadClient(c, addr):
 
                 #método de addfile
                 if data [1] == "1":
-                    addFile(data)
-                    c.connection.send(("Arquivo adicionado").encode())
-                    print("Arquivo adicionado")
+                    ret = addFile(data)
+                    ret = bytearray(str(2) + str(1) + str(ret), "utf-8")
+                    c.connection.send(ret)
 
 
                 # if data.upper() == "TIME":
