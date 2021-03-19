@@ -45,38 +45,41 @@ def threadClient(c, addr):
     global files
 
     print("Cliente "+ str(c.id) +" conectado")
-    while True:
-        data = c.connection.recv(1024).decode()
-        # print("Cliente "+ str(c.id)+ ":",  data)
+    try:
+        while True:
+            data = c.connection.recv(1024).decode()
+            # print("Cliente "+ str(c.id)+ ":",  data)
 
-        for client in clients:
-            if addr == client.addr:
+            for client in clients:
+                if addr == client.addr:
 
-                #método de addfile
-                if data [1] == "1":
-                    ret = addFile(data)
-                    ret = bytearray(str(2) + str(1) + str(ret), "utf-8")
-                    c.connection.send(ret)
+                    #método de addfile
+                    if data [1] == "1":
+                        ret = addFile(data)
+                        ret = bytearray(str(2) + str(1) + str(ret), "utf-8")
+                        c.connection.send(ret)
 
 
-                # if data.upper() == "TIME":
-                #     time = getTimeDate(True)
-                #     c.connection.send(time)
-                # elif data.upper() == "DATE":
-                #     date = getTimeDate(False)
-                #     c.connection.send(date)
-                # elif data.upper() == "FILES":
-                #     path = getPath()
-                #     c.connection.send(path)
-                # elif "DOWN" in data.upper():
-                #     downloadFile(data[5:])
-                #     c.connection.send(("Copiado").encode())
+                    # if data.upper() == "TIME":
+                    #     time = getTimeDate(True)
+                    #     c.connection.send(time)
+                    # elif data.upper() == "DATE":
+                    #     date = getTimeDate(False)
+                    #     c.connection.send(date)
+                    # elif data.upper() == "FILES":
+                    #     path = getPath()
+                    #     c.connection.send(path)
+                    # elif "DOWN" in data.upper():
+                    #     downloadFile(data[5:])
+                    #     c.connection.send(("Copiado").encode())
 
-                elif data.upper() == "EXIT":
-                    print("Cliente "+ str(c.id)+ " saiu")
-                    clients.remove(c)
-                    c.connection.close()
-                    break
+                    elif data.upper() == "EXIT":
+                        print("Cliente "+ str(c.id)+ " saiu")
+                        clients.remove(c)
+                        c.connection.close()
+                        break
+    except:
+        print("Cliente "+ str(c.id)+ " desconectado")
                 
 def connectClient(s):
     connection, addr = s.accept()
