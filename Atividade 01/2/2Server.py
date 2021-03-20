@@ -1,7 +1,8 @@
-import socket
-from threading import Thread
 import os
 import sys
+import socket
+from threading import Thread
+from functions import delimiterStringOutput
 
 i = 0
 files = []
@@ -13,33 +14,23 @@ class Client:
 
 #método de addfile
 def addFile(data):
-    
-    files.append(data[0])
-    files.append(data[1])
-    # pos = 2
-    # counter = 3
 
-    print('data ' + data)
-
-    # while counter < len(data):
-    #     if (data[counter] == '\n'):
-    #         files.append(data[pos:counter])
-    #         counter += 1
-    #         pos = counter
-    #     counter+=1
+    fileName = data[4]
+    fileData = data[5]
 
     dir_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-
-    print('data ' + str(data).split('\n'))
+    print('dirpath'+ dir_path)
 
     try:
-        print()
-        newF = open (dir_path+ "/serverFiles/"+ files[3], "w+")
-        newF.write(files[5])
+        print('before')
+        newF = open (dir_path + "/serverFiles/" + fileName, "w+")
+        print('after')
+        newF.write(fileData)
         newF.close()
         print("Arquivo adicionado")
         return 1
     except:
+        print('error addfile')
         return 2
 
 
@@ -62,7 +53,8 @@ def threadClient(c, addr):
             if command == '1':
                 print('é addfile!')
                 ret = addFile(data)
-                ret = bytearray(str(2) + str(1) + str(ret), "utf-8")
+                ret = delimiterStringOutput([2, 1, ret])
+                ret = bytearray(ret, 'UTF-8')
                 c.connection.send(ret)
 
             elif data.upper() == "EXIT":

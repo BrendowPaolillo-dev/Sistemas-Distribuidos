@@ -1,16 +1,7 @@
 import socket
-from threading import Thread
 from sys import getsizeof
-
-def delimiterStringOutput(dataArray):
-    formatedString = ''
-    for data in dataArray:
-        if (formatedString != ''):
-            formatedString = formatedString + '\n' + str(data)
-        else: 
-            formatedString = str(data)
-
-    return formatedString
+from threading import Thread
+from functions import delimiterStringOutput
 
 def threadSender(s):
     while True: 
