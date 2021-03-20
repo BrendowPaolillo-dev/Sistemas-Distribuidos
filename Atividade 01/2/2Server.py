@@ -53,10 +53,10 @@ def threadClient(c, addr):
                 break
 
             if command == '1':
+                print('é addfile!')
                 ret = addFile(data)
-                print('é addfile!', ret)
-                ret = asByteArray([2, 1, ret])
-                print('ret!', ret)
+                ret = formatToHeaderParams([2, 1, ret])
+                ret = asByteArray(ret)
                 c.connection.send(ret)
 
             else:

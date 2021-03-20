@@ -4,23 +4,28 @@ from sys import getsizeof
 from threading import Thread
 
 def addfile(params):
-    fileName = params[0]
-    fileData = ''
-    with open(fileName, 'r') as f:
-        fileData = f.read()
+    try:
+        fileName = params[0]
+        fileData = ''
+        with open(fileName, 'r') as f:
+            fileData = f.read()
 
-    fileSize = getsizeof(fileData)
-    fileNameSize = getsizeof(fileName)
+        fileSize = getsizeof(fileData)
+        fileNameSize = getsizeof(fileName)
 
-    stringOutput = formatToHeaderParams([1, 1, fileNameSize, fileSize, fileName, fileData])
+        stringOutput = formatToHeaderParams([1, 1, fileNameSize, fileSize, fileName, fileData])
 
-    stringOutput =  asByteArray(stringOutput)
+        stringOutput =  asByteArray(stringOutput)
 
-    return stringOutput
+        return stringOutput
+
+    except:
+        print('Por favor referencie um arquivo existente no diretório atual.')
+        return ''
 
 def threadSender(s):
     while True: 
-        stringInput = input("Comando: ")
+        stringInput = input("./ ")
 
         completeCommand = stringInput.split(' ')
         command = completeCommand[0].upper()
@@ -28,7 +33,10 @@ def threadSender(s):
 
         if command == "ADDFILE":
             msg = addfile(params)
-            s.send(msg)
+            if msg:
+                s.send(msg)
+
+        # if command == ""
 
         elif stringInput.upper() == "EXIT":
             formatedString = formatToHeaderParams([1, 0])
@@ -36,11 +44,35 @@ def threadSender(s):
             s.send(msg)
             break
 
+def handleRes(res):
+    codes = str(res, 'UTF-8').split('\n')
+    operationCode = codes[1]
+    operationStatus = codes[2]
+
+    msgToClient = ''
+
+    if operationCode == '1':
+        msgToClient += 'Operação ADDFILE '
+    if operationCode == '2':
+        msgToClient += 'Operação GETFILESLIST '
+    if operationCode == '3':
+        msgToClient += 'Operação GETFILE '
+
+    if operationStatus == '1':
+        msgToClient += 'bem sucedida!'
+    else:
+        msgToClient += 'falhou!'
+
+    return msgToClient
+
 def threadReceiver(s):
     while True:
-        data = s.recv(1024)
-        print ("Servidor:", data)
-        if not data:
+        res = s.recv(1024)
+
+        print(handleRes(res))
+
+        if not res:
+            print('Não houve resposta do servidor, seriço encerrado!')
             break
 
 host = '127.0.0.1'
