@@ -1,44 +1,44 @@
 import socket
+from functions import *
 from sys import getsizeof
 from threading import Thread
-from functions import delimiterStringOutput
+
+def addfile(params):
+    fileName = params[0]
+    fileData = ''
+    with open(fileName, 'r') as f:
+        fileData = f.read()
+
+    fileSize = getsizeof(fileData)
+    fileNameSize = getsizeof(fileName)
+
+    stringOutput = formatToHeaderParams([1, 1, fileNameSize, fileSize, fileName, fileData])
+
+    stringOutput =  asByteArray(stringOutput)
+
+    return stringOutput
 
 def threadSender(s):
     while True: 
-        stringOutput = []   
         stringInput = input("Comando: ")
-        if stringInput[0:7].upper() == "ADDFILE":
-            fileName = stringInput [8:]
 
-            fileData = ''
-            with open(fileName, 'r') as f:
-                fileData = f.read()
+        completeCommand = stringInput.split(' ')
+        command = completeCommand[0].upper()
+        params = completeCommand[1:len(completeCommand)]
 
-            fileSize = getsizeof(fileData)
-            fileNameSize = getsizeof(fileName)
+        if command == "ADDFILE":
+            msg = addfile(params)
+            s.send(msg)
 
-            print([1, 1, fileNameSize, fileSize, fileName, fileData])
-            
-            stringOutput = delimiterStringOutput([1, 1, fileNameSize, fileSize, fileName, fileData])
-            print('delimiterStringOutput \n' + stringOutput)
-            
-            stringOutput =  bytearray(stringOutput, 'UTF-8')
-            print(stringOutput)
-
-            # stringOutput += fileToCreate + bytearray('\n', 'utf-8')
-            
-            # print(989898, stringInput)
-            # stringOutput.append((size).to_bytes(1, byteorder="big"))
-            # stringOutput = bytes(stringOutput)
-            # print (stringOutput)
-            # stringOutput.append(str.encode(stringInput))
-            s.send(stringOutput)
         elif stringInput.upper() == "EXIT":
+            formatedString = formatToHeaderParams([1, 0])
+            msg = asByteArray(formatedString)
+            s.send(msg)
             break
 
 def threadReceiver(s):
     while True:
-        data = s.recv(1024).decode()
+        data = s.recv(1024)
         print ("Servidor:", data)
         if not data:
             break

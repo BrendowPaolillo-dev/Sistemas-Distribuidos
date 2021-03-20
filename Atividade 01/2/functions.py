@@ -1,4 +1,4 @@
-def delimiterStringOutput(dataArray):
+def formatToHeaderParams(dataArray):
     formatedString = ''
     for data in dataArray:
         if (formatedString != ''):
@@ -7,3 +7,6 @@ def delimiterStringOutput(dataArray):
             formatedString = str(data)
 
     return formatedString
+
+def asByteArray(array):
+    return bytearray(array, 'UTF-8')

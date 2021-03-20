@@ -1,8 +1,8 @@
 import os
 import sys
 import socket
+from functions import *
 from threading import Thread
-from functions import delimiterStringOutput
 
 i = 0
 files = []
@@ -19,12 +19,9 @@ def addFile(data):
     fileData = data[5]
 
     dir_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-    print('dirpath'+ dir_path)
 
     try:
-        print('before')
         newF = open (dir_path + "/serverFiles/" + fileName, "w+")
-        print('after')
         newF.write(fileData)
         newF.close()
         print("Arquivo adicionado")
@@ -50,17 +47,21 @@ def threadClient(c, addr):
             print(data)
 
             # Método de addfile
-            if command == '1':
-                print('é addfile!')
-                ret = addFile(data)
-                ret = delimiterStringOutput([2, 1, ret])
-                ret = bytearray(ret, 'UTF-8')
-                c.connection.send(ret)
-
-            elif data.upper() == "EXIT":
+            if command == '0':
                 print("Cliente "+ str(c.id)+ " desconectado")
                 c.connection.close()
                 break
+
+            if command == '1':
+                ret = addFile(data)
+                print('é addfile!', ret)
+                ret = asByteArray([2, 1, ret])
+                print('ret!', ret)
+                c.connection.send(ret)
+
+            else:
+                c.connection.send(asByteArray('Comando não encontrado'))
+
     except:
         print("Cliente "+ str(c.id)+ " desconectado")
                 
