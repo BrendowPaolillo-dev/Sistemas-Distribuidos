@@ -2,20 +2,39 @@ import socket
 from threading import Thread
 from sys import getsizeof
 
+def delimiterStringOutput(dataArray):
+    formatedString = ''
+    for data in dataArray:
+        if (formatedString != ''):
+            formatedString = formatedString + '\n' + str(data)
+        else: 
+            formatedString = str(data)
+
+    return formatedString
 
 def threadSender(s):
     while True: 
         stringOutput = []   
         stringInput = input("Comando: ")
         if stringInput[0:7].upper() == "ADDFILE":
-            stringInput = stringInput [8:]
-            with open(stringInput, 'rb') as f:
-                fileToCreate = f.read()
-            fileSize = getsizeof(fileToCreate)
+            fileName = stringInput [8:]
 
-            nameSize = getsizeof(stringInput)
-            stringOutput =  bytearray(str(1) + str(1) + str(nameSize) + "\n" + stringInput + "\n" + str(fileSize) + "\n" , 'utf-8')
-            stringOutput += fileToCreate + bytearray('\n', 'utf-8')
+            fileData = ''
+            with open(fileName, 'r') as f:
+                fileData = f.read()
+
+            fileSize = getsizeof(fileData)
+            fileNameSize = getsizeof(fileName)
+
+            print([1, 1, fileNameSize, fileSize, fileName, fileData])
+            
+            stringOutput = delimiterStringOutput([1, 1, fileNameSize, fileSize, fileName, fileData])
+            print('delimiterStringOutput \n' + stringOutput)
+            
+            stringOutput =  bytearray(stringOutput, 'UTF-8')
+            print(stringOutput)
+
+            # stringOutput += fileToCreate + bytearray('\n', 'utf-8')
             
             # print(989898, stringInput)
             # stringOutput.append((size).to_bytes(1, byteorder="big"))
