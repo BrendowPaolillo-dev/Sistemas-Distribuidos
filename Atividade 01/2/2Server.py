@@ -6,6 +6,7 @@ from threading import Thread
 
 i = 0
 files = []
+dir_path = os.path.dirname(os.path.realpath(sys.argv[0])) + "/serverFiles/"
 
 class Client:
     def __init__(self, connection, addr):
@@ -18,18 +19,33 @@ def addFile(data):
     fileName = data[4]
     fileData = data[5]
 
-    dir_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-
     try:
-        newF = open (dir_path + "/serverFiles/" + fileName, "w+")
+        newF = open (dir_path + fileName, "w+")
         newF.write(fileData)
         newF.close()
         print("Arquivo adicionado")
-        return 1
+        return formatToHeaderParams([2, 1, 1])
     except:
         print('error addfile')
-        return 2
+        return formatToHeaderParams([2, 1, 2])
 
+def getFilesList():
+    fileList = os.listdir(dir_path)
+    fileListNames = []
+    headerParams = [2, 3, 1]
+
+    try:
+        for f in fileList:
+            fName = os.path.basename(f)
+            fileListNames.append(fName)
+
+        for fName in fileListNames:
+            headerParams.extend([str(sys.getsizeof(fName)), fName, ';;'])
+
+        return formatToHeaderParams(headerParams)
+
+    except:
+        return formatToHeaderParams([2, 3, 2])
 
 def threadClient(c, addr):
     # Recebe os dados
@@ -46,21 +62,24 @@ def threadClient(c, addr):
 
             print(data)
 
+            ret = ''
+
             # Método de addfile
             if command == '0':
                 print("Cliente "+ str(c.id)+ " desconectado")
                 c.connection.close()
                 break
 
-            if command == '1':
-                print('é addfile!')
+            elif command == '1':
                 ret = addFile(data)
-                ret = formatToHeaderParams([2, 1, ret])
-                ret = asByteArray(ret)
-                c.connection.send(ret)
-
+            elif command == '3':
+                ret = getFilesList()
             else:
                 c.connection.send(asByteArray('Comando não encontrado'))
+
+            if (ret):
+                ret = asByteArray(ret)
+                c.connection.send(ret)  
 
     except:
         print("Cliente "+ str(c.id)+ " desconectado")
