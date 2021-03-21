@@ -1,10 +1,21 @@
+import os
+import sys
 import socket
 from functions import *
-from sys import getsizeof
 from threading import Thread
 
-host = '127.0.0.1'
 port = 12345
+host = '127.0.0.1'
+dir_path = os.path.dirname(os.path.realpath(sys.argv[0])) + "/clientFiles/"
+
+def getDefaultHeader(params, operation):
+    fileName = params[0]
+    fileNameSize = sys.getsizeof(fileName)
+
+    stringOutput = formatToHeaderParams([1, operation, fileNameSize, fileName])
+    stringOutput =  asByteArray(stringOutput)
+
+    return stringOutput
 
 def addfile(params):
     try:
@@ -13,8 +24,8 @@ def addfile(params):
         with open(fileName, 'r') as f:
             fileData = f.read()
 
-        fileSize = getsizeof(fileData)
-        fileNameSize = getsizeof(fileName)
+        fileSize = sys.getsizeof(fileData)
+        fileNameSize = sys.getsizeof(fileName)
 
         stringOutput = formatToHeaderParams([1, 1, fileNameSize, fileSize, fileName, fileData])
 
@@ -28,13 +39,7 @@ def addfile(params):
 
 def deletefile(params):
     try:
-        fileName = params[0]
-        fileNameSize = getsizeof(fileName)
-
-        stringOutput = formatToHeaderParams([1, 2, fileNameSize, fileName])
-        stringOutput =  asByteArray(stringOutput)
-
-        return stringOutput
+        return getDefaultHeader(params, 2)
 
     except:
         return ''
@@ -47,6 +52,12 @@ def getFilesList(params):
         return stringOutput
     except:
         return ''
+
+def getFile(params):
+    try:
+        return getDefaultHeader(params, 4)
+    except:
+        print()
 
 def threadSender(s):
     while True: 
@@ -66,6 +77,10 @@ def threadSender(s):
 
         elif command == "GETFILESLIST":
             msg = getFilesList(params)
+
+        elif command == "GETFILE":
+            msg = getFile(params)
+
 
         elif stringInput.upper() == "EXIT":
             formatedString = formatToHeaderParams([1, 0])
@@ -96,13 +111,22 @@ def showFilesList(fileList):
 
     print()
 
+def downloadFile(fileParams):
+    try:
+        fileName = fileParams[0]
+        fileData = fileParams[1]
+
+        newF = open (dir_path + fileName, "w+")
+        newF.write(fileData)
+        newF.close()
+    except:
+        print('Falha ao finalizar o download do arquivo')
+
 def handleRes(res):
-    codes = str(res, 'UTF-8').split('\n')
+    params = str(res, 'UTF-8').split('\n')
 
-    print(codes)
-
-    operationCode = codes[1]
-    operationStatus = codes[2]
+    operationCode = params[1]
+    operationStatus = params[2]
 
     msgToClient = ''
 
@@ -112,23 +136,24 @@ def handleRes(res):
         msgToClient += 'Operação DELETE '
     elif operationCode == '3':
         msgToClient += 'Operação GETFILESLIST '
-        showFilesList(codes[3::])
+        showFilesList(params[3::])
     elif operationCode == '4':
         msgToClient += 'Operação GETFILE '
+        downloadFile(params[4::])
 
     if operationStatus == '1':
         msgToClient += 'bem sucedida!'
     else:
         msgToClient += 'falhou!'
 
-    return msgToClient
+    print(msgToClient)
 
 def threadReceiver(s):
     while True:
         res = s.recv(1024)
 
         if res:
-            print(handleRes(res))
+            handleRes(res)
 
         if not res:
             print('Não houve resposta do servidor, seriço encerrado!')

@@ -23,10 +23,8 @@ def addFile(data):
         newF = open (dir_path + fileName, "w+")
         newF.write(fileData)
         newF.close()
-        print("Arquivo adicionado")
         return formatToHeaderParams([2, 1, 1])
     except:
-        print('error addfile')
         return formatToHeaderParams([2, 1, 2])
 
 def deleteFile(data):
@@ -58,6 +56,19 @@ def getFilesList():
     except:
         return formatToHeaderParams([2, 3, 2])
 
+def getFile(data):
+    fileName = data[0]
+
+    try:
+        newF = open (dir_path + fileName, "r")
+        fileData = newF.read()
+
+        newF.close()
+        return formatToHeaderParams([2, 4, 1, sys.getsizeof(fileData), fileName, fileData])
+    except:
+        return formatToHeaderParams([2, 4, 2])
+
+
 def threadClient(c, addr):
     # Recebe os dados
     global files
@@ -68,14 +79,9 @@ def threadClient(c, addr):
         while True:
             data = str(c.connection.recv(1024), 'UTF-8')
             data = data.split('\n')
-
             command = data[1]
-
-            print(data)
-
             ret = ''
 
-            # Método de addfile
             if command == '0':
                 print("Cliente "+ str(c.id)+ " desconectado")
                 c.connection.close()
@@ -83,10 +89,16 @@ def threadClient(c, addr):
 
             elif command == '1':
                 ret = addFile(data[3::])
+
             elif command == '2':
                 ret = deleteFile(data[3::])
+
             elif command == '3':
                 ret = getFilesList()
+
+            elif command == '4':
+                ret = getFile(data[3::])
+
             else:
                 c.connection.send(asByteArray('Comando não encontrado'))
 
