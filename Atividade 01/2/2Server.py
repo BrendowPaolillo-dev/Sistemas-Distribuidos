@@ -16,8 +16,8 @@ class Client:
 #método de addfile
 def addFile(data):
 
-    fileName = data[4]
-    fileData = data[5]
+    fileName = data[1]
+    fileData = data[2]
 
     try:
         newF = open (dir_path + fileName, "w+")
@@ -28,6 +28,17 @@ def addFile(data):
     except:
         print('error addfile')
         return formatToHeaderParams([2, 1, 2])
+
+def deleteFile(data):
+    try:
+        filePath = dir_path + data[0]
+
+        if os.path.exists(filePath):
+            return formatToHeaderParams([2, 2, 1])
+
+        return formatToHeaderParams([2, 2, 2])
+    except:
+        return formatToHeaderParams([2, 2, 2])
 
 def getFilesList():
     fileList = os.listdir(dir_path)
@@ -71,7 +82,9 @@ def threadClient(c, addr):
                 break
 
             elif command == '1':
-                ret = addFile(data)
+                ret = addFile(data[3::])
+            elif command == '2':
+                ret = deleteFile(data[3::])
             elif command == '3':
                 ret = getFilesList()
             else:

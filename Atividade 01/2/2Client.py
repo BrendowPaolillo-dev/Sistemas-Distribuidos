@@ -26,6 +26,19 @@ def addfile(params):
         print('Por favor referencie um arquivo existente no diretório atual.')
         return ''
 
+def deletefile(params):
+    try:
+        fileName = params[0]
+        fileNameSize = getsizeof(fileName)
+
+        stringOutput = formatToHeaderParams([1, 2, fileNameSize, fileName])
+        stringOutput =  asByteArray(stringOutput)
+
+        return stringOutput
+
+    except:
+        return ''
+
 def getFilesList(params):
     try:
         stringOutput = formatToHeaderParams([1, 3])
@@ -48,7 +61,10 @@ def threadSender(s):
         if command == "ADDFILE":
             msg = addfile(params)
 
-        if command == "GETFILESLIST":
+        elif command == "DELETE":
+            msg = deletefile(params)
+
+        elif command == "GETFILESLIST":
             msg = getFilesList(params)
 
         elif stringInput.upper() == "EXIT":
