@@ -32,6 +32,7 @@ def deleteFile(data):
         filePath = dir_path + data[0]
 
         if os.path.exists(filePath):
+            os.remove(filePath)
             return formatToHeaderParams([2, 2, 1])
 
         return formatToHeaderParams([2, 2, 2])
