@@ -33,7 +33,6 @@ def getFilesList(params):
 
         return stringOutput
     except:
-        print('Não há arquivo nenhum armazenado.')
         return ''
 
 def threadSender(s):
@@ -57,6 +56,9 @@ def threadSender(s):
             msg = asByteArray(formatedString)
             s.shutdown(1)
             # s.close(1)
+        
+        else:
+            print('Comando não reconhecido, por favor tente novamente')
 
         if msg:
             s.send(msg)
@@ -69,9 +71,12 @@ def showFilesList(fileList):
         if (fileList[i + 1] == ';;'):
             fileNamesList.append(fileList[i])
 
-    print('\nLista dos arquivos existentes no servidor:')
-    for name in fileNamesList:
-        print(name)
+    if len(fileNamesList): 
+        print('\nLista dos arquivos existentes no servidor:')
+        for name in fileNamesList:
+            print('- ' + name)
+    else:
+        print('\nNão há arquivo nenhum armazenado.')
 
     print()
 
