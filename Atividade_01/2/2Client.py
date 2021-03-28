@@ -69,16 +69,16 @@ def threadSender(s):
 
         msg = ''
 
-        if command == "ADDFILE":
+        if command.upper() == "ADDFILE":
             msg = addfile(params)
 
-        elif command == "DELETE":
+        elif command.upper() == "DELETE":
             msg = deletefile(params)
 
-        elif command == "GETFILESLIST":
+        elif command.upper() == "GETFILESLIST":
             msg = getFilesList(params)
 
-        elif command == "GETFILE":
+        elif command.upper() == "GETFILE":
             msg = getFile(params)
 
 
