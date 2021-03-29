@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -10,10 +9,15 @@ public class ThreadSender extends Thread {
 
     DatagramSocket dgramSocket;
     int resp = 0;
+    String nick;
+    byte[] nickBytes;
 
-    public ThreadSender() {
+
+    public ThreadSender(String nick, byte[] nickBytes) {
         try {
             this.dgramSocket = new DatagramSocket(6666); //cria um socket datagrama
+            this.nick = nick;
+            this.nickBytes = nickBytes;
 
         } catch (Exception e) {
             //TODO: handle exception
@@ -33,25 +37,39 @@ public class ThreadSender extends Thread {
             int serverPort = dstPort; // porta do servidor
 
             do {
+                byte[] nick = new byte[this.nickBytes.length];
+                nick = this.nick.getBytes();
+
+
                 System.out.println("Mensagem: ");
                 String msg = reader.nextLine();
 
                 byte[] m = msg.getBytes(); // transforma a mensagem em bytes
+                byte[] mSize = new byte[] {(byte)m.length};
+
+
+                byte[] packageToSend = new byte [this.nickBytes.length + nick.length + mSize.length + m.length];
+                System.arraycopy(this.nickBytes, 0, packageToSend, 0, this.nickBytes.length);
+                System.arraycopy(nick, 0, packageToSend, this.nickBytes.length, nick.length);
+                System.arraycopy(mSize, 0, packageToSend, (this.nickBytes.length + nick.length), mSize.length);
+                System.arraycopy(m, 0, packageToSend, (this.nickBytes.length + nick.length + mSize.length), m.length);
+
+                // System.out.println(packageToSend.length);
 
                 /* cria um pacote datagrama */
                 DatagramPacket request
-                        = new DatagramPacket(m, m.length, serverAddr, serverPort);
+                        = new DatagramPacket(packageToSend, packageToSend.length, serverAddr, serverPort);
 
                 /* envia o pacote */
                 this.dgramSocket.send(request);
 
                 /* cria um buffer vazio para receber datagramas */
-                byte[] buffer = new byte[1000];
-                DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+                // byte[] buffer = new byte[1000];
+                // DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
 
                 /* aguarda datagramas */
-                this.dgramSocket.receive(reply);
-                System.out.println("Resposta: " + new String(reply.getData(),0,reply.getLength()));
+                // this.dgramSocket.receive(reply);
+                // System.out.println("Resposta: " + new String(reply.getData(),0,reply.getLength()));
 
                 resp = JOptionPane.showConfirmDialog(null, "Nova mensagem?", 
                         "Continuar", JOptionPane.YES_NO_OPTION);
