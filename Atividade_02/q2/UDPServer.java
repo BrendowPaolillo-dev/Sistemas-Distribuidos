@@ -1,36 +1,68 @@
 import java.io.*;
 import java.net.*;
+import java.security.MessageDigest;
 
 public class UDPServer {
-    public static void main(String args[]){
+    DatagramSocket dgramSocket = new DatagramSocket(6666);
+    byte[] buffer = new byte[1024]; // cria um buffer para receber requisições
+    DatagramPacket dgramPacket = new DatagramPacket(buffer, buffer.length);
+    
+    public byte[] checksum(String fileName) throws Exception{
+        InputStream fis =  new FileInputStream(fileName);
+
+        byte[] buffer = new byte[1024];
+        MessageDigest complete = MessageDigest.getInstance("MD5");
+        int numRead;
+
+        do {
+            numRead = fis.read(buffer);
+            if (numRead > 0) {
+                complete.update(buffer, 0, numRead);
+            }
+        } while (numRead != -1);
+
+        fis.close();
+        return complete.digest();
+    }
+
+    public void run(){
         try {
             // cria um socket datagrama em uma porta especifica
-            DatagramSocket dgramSocket = new DatagramSocket(6666);
+            
             try {
-               
-                while (true) {
-                   byte[] buffer = new byte[1024]; // cria um buffer para receber requisições
-    
-                   /* cria um pacote vazio */
-                   DatagramPacket dgramPacket = new DatagramPacket(buffer, buffer.length);
-                   dgramSocket.receive(dgramPacket); // aguarda a chegada de datagramas
-    
-                   byte[] fileNameBytes = dgramPacket.getData();
-                   
-                //    byte nickSize = received[0];
-                   
-                //    byte[] nickByte = new byte[nickSize];
-                //    System.arraycopy(received, 1, nickByte, 0, nickSize);
-                   String fileName = new String(fileNameBytes);
-    
-                //    byte msgSize = received[1+nickSize];
-                //    byte[] msgByte = new byte[msgSize];
-                //    System.arraycopy(received, 2 + nickSize, msgByte, 0, msgSize );
-                //    String msg = new String(msgByte);
-    
-                   System.out.println("Nome do arquivo: " + fileName);
-    
-               } // while
+                this.dgramSocket.receive(this.dgramPacket); // aguarda a chegada de datagramas
+ 
+                byte[] fileNameBytes = this.dgramPacket.getData();
+                String fileName = new String(fileNameBytes);
+                System.out.println("Nome do arquivo: " + fileName);
+                
+                byte[] file;
+                
+                if (fileName != null)
+                try {
+                    byte[] md5Real = this.dgramPacket.getData();
+                    byte[] md5Calc = new byte[1024];
+                    while (md5Calc != md5Real) {
+                        //recebe a carga de dados do UDP
+                        byte[] payload = this.dgramPacket.getData();
+
+                        //concatena a carga recebida no vetor do arquivo completo
+                        System.arraycopy(payload, 0, file, file.length, file.length + payload.length);
+                        
+                        //preenche o arquivo
+                        File newFile = new File(fileName);
+                        try (FileOutputStream out = new FileOutputStream(newFile)) {
+                            out.write(file);
+                        }
+
+                        //calcula toda vez o md5
+                        md5Calc = checksum(fileName);
+        
+                } // while
+                System.out.println("Arquivo recebido com sucesso.");
+                } catch (Exception e) {
+                    //TODO: handle exception
+                }
            } catch (SocketException e) {
                System.out.println("Socket: " + e.getMessage());
            } catch (IOException e) {
@@ -41,5 +73,6 @@ public class UDPServer {
         } catch (Exception e) {
             //TODO: handle exception
         }
+        System.out.println("Finalizada a transferência.");
     }
 }
