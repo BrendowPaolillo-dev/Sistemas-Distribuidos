@@ -3,10 +3,20 @@ import java.net.*;
 import java.security.MessageDigest;
 
 public class UDPServer {
-    DatagramSocket dgramSocket = new DatagramSocket(6666);
-    byte[] buffer = new byte[1024]; // cria um buffer para receber requisições
-    DatagramPacket dgramPacket = new DatagramPacket(buffer, buffer.length);
-    
+    DatagramSocket dgramSocket;
+    byte[] buffer;
+    DatagramPacket dgramPacket;
+
+    public UDPServer() {
+        try {
+            this.dgramSocket = new DatagramSocket(6666);
+        } catch (Exception e) {
+            //TODO: handle exception
+        }
+        this.buffer = new byte[1024]; // cria um buffer para receber requisições
+        this.dgramPacket = new DatagramPacket(buffer, buffer.length);
+    }
+
     public byte[] checksum(String fileName) throws Exception{
         InputStream fis =  new FileInputStream(fileName);
 
@@ -36,7 +46,7 @@ public class UDPServer {
                 String fileName = new String(fileNameBytes);
                 System.out.println("Nome do arquivo: " + fileName);
                 
-                byte[] file;
+                byte[] file = new byte[1024];
                 
                 if (fileName != null)
                 try {
@@ -74,5 +84,9 @@ public class UDPServer {
             //TODO: handle exception
         }
         System.out.println("Finalizada a transferência.");
+    }
+
+    public static void main(String[] args) {
+        UDPServer server = new UDPServer();
     }
 }
