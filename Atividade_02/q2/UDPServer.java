@@ -15,6 +15,8 @@ public class UDPServer {
         }
         this.buffer = new byte[1024]; // cria um buffer para receber requisições
         this.dgramPacket = new DatagramPacket(buffer, buffer.length);
+        
+        run();
     }
 
     public byte[] checksum(String fileName) throws Exception{
