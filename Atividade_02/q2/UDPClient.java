@@ -4,6 +4,7 @@ import java.util.*;
 import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 
 public class UDPClient {
@@ -22,7 +23,7 @@ public class UDPClient {
             
             /* armazena o IP do destino */
             System.out.println("IP Destino: ");
-            String dstIP = reader.nextLine();
+            String dstIP = "192.168.56.102";
             this.serverAddr = InetAddress.getByName(dstIP);
 
             run();
@@ -63,10 +64,8 @@ public class UDPClient {
 
     public void splitFile(File f) throws IOException {
         
-        
-        
         int partCounter = 1;
-        int sizeOfFiles = 1024;// 1MB
+        int sizeOfFiles = 1024;
         
         byte[] buffer = new byte[sizeOfFiles];
 
@@ -79,18 +78,49 @@ public class UDPClient {
             ) {
                 byte[] md5 = new byte[1024];
                 try {
+                    //calcula o md5 do arquivo
                     md5 = checksum(fileName);   
                 } catch (Exception e) {
                     //TODO: handle exception
                 }
                 
                 System.out.println("Md5: " + md5);
+                try {
+                    Thread.sleep(100);
+                    
+                } catch (Exception e) {
+                    //TODO: handle exception
+                }
+                //envia o md5 do arquivo total para o servidor
                 sendPackage(md5, md5.length);
+                
+                //calcula a quantidade de pacotes a serem enviados
+                long qtdOfPckg = (f.length()/buffer.length) + 1;
+ 
+                System.out.println("Quantidade de pacotes: " + qtdOfPckg);
+                
+                //insere o Long no byte[]
+                String qtdBuffer = String.valueOf(qtdOfPckg);
+                try {
+                    Thread.sleep(100);
+                    
+                } catch (Exception e) {
+                    //TODO: handle exception
+                }
+                //envia o número de pacotes que o servidor deve ler
+                sendPackage(qtdBuffer.getBytes(), qtdBuffer.getBytes().length);
+                
                 
                 int bytesAmount = 0;
                 while ((bytesAmount = bis.read(buffer)) > 0) {
-                    
+                    try {
+                        Thread.sleep(100);
+                        
+                    } catch (Exception e) {
+                        //TODO: handle exception
+                    }
                     sendPackage(buffer, bytesAmount);
+                    System.out.println("payload: " + buffer);
     
                 }
                 System.out.println("Arquivo enviado com sucesso.");
@@ -117,8 +147,12 @@ public class UDPClient {
                 File f = new File(fileName);
 
                 byte[] fileNameBytes = fileName.getBytes(); // transforma o nome do arquivo em bytes
-                
+                byte[] fileSize = new byte[32];
+
+                // System.arraycopy(fileSize, 0, f.length(), 0, arg4);
+
                 sendPackage(fileNameBytes, fileNameBytes.length);
+                // sendPackage(, payloadSize);
 
                 splitFile(f);
 
