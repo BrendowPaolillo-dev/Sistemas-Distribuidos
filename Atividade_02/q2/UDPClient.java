@@ -16,7 +16,10 @@ public class UDPClient {
 
     public UDPClient(){
         try {
+            // Recebe o comandos
+            System.out.println("UDPClient");
             Scanner reader = new Scanner(System.in);
+            System.out.println("UDPClient2");
 
             //Cria socket de UDP
             this.dgramSocket = new DatagramSocket(this.serverPort);;
@@ -24,6 +27,7 @@ public class UDPClient {
             /* armazena o IP do destino */
             System.out.println("IP Destino: ");
             String dstIP = "192.168.56.102";
+            // se conecta com o servidor
             this.serverAddr = InetAddress.getByName(dstIP);
 
             run();
@@ -33,7 +37,25 @@ public class UDPClient {
         }
     }
 
-    public byte[] checksum(String fileName) throws Exception{
+    public StringBuilder convertToHexa(byte[] bytes){
+
+        StringBuilder sb = new StringBuilder();
+        
+        // loop through the bytes array
+        for (int i = 0; i < bytes.length; i++) {
+            
+            // the following line converts the decimal into
+            // hexadecimal format and appends that to the
+            // StringBuilder object
+            sb.append(Integer
+                    .toString((bytes[i] & 0xff) + 0x100, 16)
+                    .substring(1));
+        }
+
+        return sb;
+    }
+
+    public String checksum(String fileName) throws Exception{
         InputStream fis =  new FileInputStream(fileName);
 
         byte[] buffer = new byte[1024];
@@ -48,9 +70,13 @@ public class UDPClient {
         } while (numRead != -1);
 
         fis.close();
-        return complete.digest();
+
+        StringBuilder sb = convertToHexa(complete.digest());
+        
+        return sb.toString();
     }
 
+    // envia o pacote de dados para o servidor
     public void sendPackage (byte[] payload, int payloadSize){
         this.dgramPackage = new DatagramPacket(payload, payloadSize, this.serverAddr, this.serverPort);
 
@@ -74,9 +100,9 @@ public class UDPClient {
         if (fileName != null) {
             try (
                 FileInputStream fis = new FileInputStream(f); 
-            BufferedInputStream bis = new BufferedInputStream(fis)
+                BufferedInputStream bis = new BufferedInputStream(fis)
             ) {
-                byte[] md5 = new byte[1024];
+                String md5 = "";
                 try {
                     //calcula o md5 do arquivo
                     md5 = checksum(fileName);   
@@ -92,7 +118,8 @@ public class UDPClient {
                     //TODO: handle exception
                 }
                 //envia o md5 do arquivo total para o servidor
-                sendPackage(md5, md5.length);
+                byte[] byteArrayMd5 = md5.getBytes();
+                sendPackage(byteArrayMd5, byteArrayMd5.length);
                 
                 //calcula a quantidade de pacotes a serem enviados
                 long qtdOfPckg = (f.length()/buffer.length) + 1;
@@ -146,8 +173,9 @@ public class UDPClient {
 
                 File f = new File(fileName);
 
-                byte[] fileNameBytes = fileName.getBytes(); // transforma o nome do arquivo em bytes
-                byte[] fileSize = new byte[32];
+                // transforma o nome do arquivo em bytes
+                byte[] fileNameBytes = fileName.getBytes();
+                // byte[] fileSize = new byte[32];
 
                 // System.arraycopy(fileSize, 0, f.length(), 0, arg4);
 
@@ -172,6 +200,7 @@ public class UDPClient {
     }
     
     public static void main(String[] args) {
+        System.out.println("Entrou");
         UDPClient client = new UDPClient();
     }
 }

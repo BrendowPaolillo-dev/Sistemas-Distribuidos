@@ -21,7 +21,25 @@ public class UDPServer {
         run();
     }
 
-    public byte[] checksum(String fileName) throws Exception{
+    public StringBuilder convertToHexa(byte[] bytes){
+
+        StringBuilder sb = new StringBuilder();
+        
+        // loop through the bytes array
+        for (int i = 0; i < bytes.length; i++) {
+            
+            // the following line converts the decimal into
+            // hexadecimal format and appends that to the
+            // StringBuilder object
+            sb.append(Integer
+                    .toString((bytes[i] & 0xff) + 0x100, 16)
+                    .substring(1));
+        }
+
+        return sb;
+    }
+
+    public String checksum(String fileName) throws Exception{
         InputStream fis =  new FileInputStream(fileName);
 
         byte[] buffer = new byte[1024];
@@ -36,7 +54,10 @@ public class UDPServer {
         } while (numRead != -1);
 
         fis.close();
-        return complete.digest();
+
+        StringBuilder sb = convertToHexa(complete.digest());
+        
+        return sb.toString();
     }
 
     public void run(){
@@ -57,7 +78,7 @@ public class UDPServer {
                         //Recebe o md5 do arquivo
                         this.dgramSocket.receive(this.dgramPacket);
                         byte[] md5Real = this.dgramPacket.getData();
-                        byte[] md5Calc = new byte[1024];
+                        String md5Calc = "";
                         System.out.println("Recebi o Md5");
                         
                         //Recebe a quantidade de pacotes a serem recebidos
@@ -89,9 +110,9 @@ public class UDPServer {
                         } // while
                         //calcula o md5 do arquivo recebido
                         md5Calc = checksum(fileName);
-                        System.out.println("Resultado da comparacao do Md5: " + Arrays.equals(md5Real, md5Calc));
+                        System.out.println("Resultado da comparacao do Md5: " + md5Calc.equals(convertToHexa(md5Real).toString()));
 
-                        if (Arrays.equals(md5Calc, md5Real) == true){
+                        if (md5Calc.equals(convertToHexa(md5Real).toString()) == true){
                             System.out.println("Arquivo recebido com sucesso.");
                         }else{
                             System.out.println("A verificação de soma falhou.");
@@ -115,6 +136,7 @@ public class UDPServer {
     }
 
     public static void main(String[] args) {
+        System.out.println("Server iniciado.");
         UDPServer server = new UDPServer();
     }
 }
