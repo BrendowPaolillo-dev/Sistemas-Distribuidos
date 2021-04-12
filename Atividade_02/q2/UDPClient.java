@@ -7,6 +7,27 @@ import java.security.NoSuchAlgorithmException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 
+/*
+    Sistema de transferência de arquivos via UDP
+    Desenvolvedores: Brendow e Lucas
+
+    Classe:     Cliente
+
+    Execução:   javac UDPClient.java
+                java UDPClient
+                Digite o IP do servidor
+                Nome do arquivo
+
+    Funcionamento:  O programa conecta o cliente ao servidor;
+                    Envia o nome do arquivo ao servidor;
+                    Seleciona o arquivo no sistema de arquivos;
+                    Calcula o Md5 do arquivo completo;
+                    Envia o Md5 para o servidor;
+                    Inicia a transferência dos bytes;
+                    E finaliza a execução ao final da transferência.
+*/
+
+
 public class UDPClient {
 
     DatagramSocket dgramSocket;
@@ -14,22 +35,22 @@ public class UDPClient {
     int serverPort = 6666;
     InetAddress serverAddr;
 
+    //método construtor
     public UDPClient(){
         try {
             // Recebe o comandos
-            System.out.println("UDPClient");
             Scanner reader = new Scanner(System.in);
-            System.out.println("UDPClient2");
 
             //Cria socket de UDP
             this.dgramSocket = new DatagramSocket(this.serverPort);;
             
-            /* armazena o IP do destino */
+            // armazena o IP do destino
             System.out.println("IP Destino: ");
-            String dstIP = "192.168.56.102";
+            String dstIP = reader.nextLine();
             // se conecta com o servidor
             this.serverAddr = InetAddress.getByName(dstIP);
 
+            //roda o fluxo principal
             run();
 
         } catch (Exception e) {
@@ -37,16 +58,13 @@ public class UDPClient {
         }
     }
 
+    //converte um vetor de bytes para uma string de Hexadecimais
     public StringBuilder convertToHexa(byte[] bytes){
 
         StringBuilder sb = new StringBuilder();
         
-        // loop through the bytes array
         for (int i = 0; i < bytes.length; i++) {
             
-            // the following line converts the decimal into
-            // hexadecimal format and appends that to the
-            // StringBuilder object
             sb.append(Integer
                     .toString((bytes[i] & 0xff) + 0x100, 16)
                     .substring(1));
@@ -55,6 +73,8 @@ public class UDPClient {
         return sb;
     }
 
+    //realiza a criação do código de verificação (md5), 
+    //para garantir a integridade do arquivo
     public String checksum(String fileName) throws Exception{
         InputStream fis =  new FileInputStream(fileName);
 
@@ -80,7 +100,7 @@ public class UDPClient {
     public void sendPackage (byte[] payload, int payloadSize){
         this.dgramPackage = new DatagramPacket(payload, payloadSize, this.serverAddr, this.serverPort);
 
-        /* envia o pacote */
+        // envia o pacote
         try {
             this.dgramSocket.send(this.dgramPackage);
         } catch (Exception e) {
@@ -88,6 +108,7 @@ public class UDPClient {
         }
     }
 
+    // divide o arquivo em buffers de 1024 bytes para enviá-los ao servidor
     public void splitFile(File f) throws IOException {
         
         int partCounter = 1;
@@ -157,6 +178,7 @@ public class UDPClient {
         }
     }
 
+    //execução inicial
     public void run() {
 
         Scanner reader = new Scanner(System.in);
@@ -165,29 +187,19 @@ public class UDPClient {
 
             String resp = "";
 
-            do {
+            System.out.println("Digite o nome do arquivo e a extensão: ");
+            String fileName = reader.nextLine();
 
-                
-                System.out.println("Digite o nome do arquivo e a extensão: ");
-                String fileName = reader.nextLine();
+            File f = new File(fileName);
 
-                File f = new File(fileName);
+            // transforma o nome do arquivo em bytes
+            byte[] fileNameBytes = fileName.getBytes();
 
-                // transforma o nome do arquivo em bytes
-                byte[] fileNameBytes = fileName.getBytes();
-                // byte[] fileSize = new byte[32];
+            // envia o nome do arquivo
+            sendPackage(fileNameBytes, fileNameBytes.length);
 
-                // System.arraycopy(fileSize, 0, f.length(), 0, arg4);
-
-                sendPackage(fileNameBytes, fileNameBytes.length);
-                // sendPackage(, payloadSize);
-
-                splitFile(f);
-
-                System.out.println("Novo arquivo? (Y/N): ");
-                resp = reader.nextLine();
-
-            } while (resp.equals("N") || resp.equals("n") != true);
+            //divide o arquivo
+            splitFile(f);
 
             /* libera o socket */
             dgramSocket.close();
@@ -200,7 +212,6 @@ public class UDPClient {
     }
     
     public static void main(String[] args) {
-        System.out.println("Entrou");
         UDPClient client = new UDPClient();
     }
 }

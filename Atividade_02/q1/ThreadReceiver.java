@@ -2,11 +2,23 @@ import java.io.*;
 import java.net.*;
 // import java.util.*;
 
-public class ThreadReceiver extends Thread {
-    // DataInputStream in;
-    // Socket clientSocket;
-    DatagramSocket dgramSocket = null;
+/*
+    Sistema de chat via UDP
+    Desenvolvedores: Brendow e Lucas
 
+    Classe:     ThreadReceiver
+
+    Execução:   javac ThreadReceiver.java
+
+
+    Funcionamento:  Recebe a mensagem do cliente para o outro;
+                    Imprime na tela;
+
+*/
+
+public class ThreadReceiver extends Thread {
+    DatagramSocket dgramSocket = null;
+    //método construtor
     public ThreadReceiver(DatagramSocket dgramSocket) {
         try {
             this.dgramSocket = dgramSocket;
@@ -14,32 +26,39 @@ public class ThreadReceiver extends Thread {
             // TODO: handle exception
         }
     }
-
+    
+    //execução principal
     @Override
     public void run() {
         try {
-             // cria um socket datagrama em uma porta especifica
 
             while (true) {
-                byte[] buffer = new byte[1000]; // cria um buffer para receber requisições
+                // cria um buffer para receber requisições
+                byte[] buffer = new byte[1000]; 
 
-                /* cria um pacote vazio */
+                // cria um pacote vazio
                 DatagramPacket dgramPacket = new DatagramPacket(buffer, buffer.length);
-                this.dgramSocket.receive(dgramPacket); // aguarda a chegada de datagramas
+                // aguarda a chegada de datagramas
+                this.dgramSocket.receive(dgramPacket);
 
                 byte[] received = dgramPacket.getData();
                 
+                //tamanho do nome na posição 0 do vetor
                 byte nickSize = received[0];
                 
+                //pega a parte do nome em bytes e converte para uma String
                 byte[] nickByte = new byte[nickSize];
                 System.arraycopy(received, 1, nickByte, 0, nickSize);
                 String nick = new String(nickByte);
 
+                //pega o tamanho da mensagem
                 byte msgSize = received[1+nickSize];
+                //pega a mensagem e converte para uma String
                 byte[] msgByte = new byte[msgSize];
                 System.arraycopy(received, 2 + nickSize, msgByte, 0, msgSize );
                 String msg = new String(msgByte);
 
+                //imprime o nome do usuário e a resposta
                 System.out.println("Resposta do " + nick + ": " + msg );
 
             } // while

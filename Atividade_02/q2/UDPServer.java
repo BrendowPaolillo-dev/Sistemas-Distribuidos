@@ -4,6 +4,24 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
+/*
+    Sistema de transferência de arquivos via UDP
+    Desenvolvedores: Brendow e Lucas
+
+    Classe:     Servidor
+
+    Execução:   javac UDPServer.java
+                java UDPServer
+
+    Funcionamento:  O programa aguarda a conexão do cliente;
+                    Recebe o nome do arquivo;
+                    Armazena os bytes recebidos;
+                    Concatena os bytes recebidos em um arquivo;
+                    Calcula o Md5 do arquivo completo;
+                    Compara o Md5 recebido com o calculado;
+                    E finaliza a execução ao final da transferência.
+*/
+
 public class UDPServer {
     DatagramSocket dgramSocket;
     DatagramPacket dgramPacket;
@@ -15,22 +33,20 @@ public class UDPServer {
         } catch (Exception e) {
             //TODO: handle exception
         }
-        byte[] buffer = new byte[1024]; // cria um buffer para receber requisições
+        // cria um buffer para receber requisições
+        byte[] buffer = new byte[1024]; 
         this.dgramPacket = new DatagramPacket(buffer, buffer.length);
         
         run();
     }
 
+    //converte um vetor de bytes para uma string de Hexadecimais
     public StringBuilder convertToHexa(byte[] bytes){
 
         StringBuilder sb = new StringBuilder();
         
-        // loop through the bytes array
         for (int i = 0; i < bytes.length; i++) {
-            
-            // the following line converts the decimal into
-            // hexadecimal format and appends that to the
-            // StringBuilder object
+
             sb.append(Integer
                     .toString((bytes[i] & 0xff) + 0x100, 16)
                     .substring(1));
@@ -39,6 +55,8 @@ public class UDPServer {
         return sb;
     }
 
+    //realiza a criação do código de verificação (md5), 
+    //para garantir a integridade do arquivo
     public String checksum(String fileName) throws Exception{
         InputStream fis =  new FileInputStream(fileName);
 
@@ -60,6 +78,7 @@ public class UDPServer {
         return sb.toString();
     }
 
+    //execução principal
     public void run(){
         try {
             
@@ -77,10 +96,10 @@ public class UDPServer {
 
                         //Recebe o md5 do arquivo
                         this.dgramSocket.receive(this.dgramPacket);
-                        byte[] md5Real = this.dgramPacket.getData();
+                        byte[] md5RealBytes = this.dgramPacket.getData();
+                        String md5Real = new String(md5RealBytes, 0, this.dgramPacket.getLength());
                         String md5Calc = "";
-                        System.out.println("Recebi o Md5");
-                        
+
                         //Recebe a quantidade de pacotes a serem recebidos
                         this.dgramSocket.receive(this.dgramPacket);
                         byte[] qtdBuffer = this.dgramPacket.getData();
@@ -96,23 +115,25 @@ public class UDPServer {
                             this.dgramSocket.receive(this.dgramPacket);
                             byte[] payload = this.dgramPacket.getData();
                             int sizePackage = this.dgramPacket.getLength();
-
-                            System.out.println("sizePackage: " + sizePackage);
+                            
                             System.out.println("Payload: " + payload );
 
-                            //escreve o arquivo na pasta
+                            //escreve o arquivo na pasta e faz o append dos bytes
                             try (FileOutputStream fos = new FileOutputStream("./"+fileName, true)) {
                                 fos.write(payload, 0, sizePackage);
                                 fos.close();
                             }
                             i++;
                             
-                        } // while
-                        //calcula o md5 do arquivo recebido
-                        md5Calc = checksum(fileName);
-                        System.out.println("Resultado da comparacao do Md5: " + md5Calc.equals(convertToHexa(md5Real).toString()));
+                        }
 
-                        if (md5Calc.equals(convertToHexa(md5Real).toString()) == true){
+                        //calcula o md5 do arquivo recebido
+                        md5Calc = checksum(fileName).toString();
+                        System.out.println("MD5 Calc: " + md5Calc + "\nMD5 Real: " + md5Real);
+                        System.out.println("Resultado da comparacao do Md5: " + md5Calc.equals(md5Real));
+
+                        //verifica se o valor calculado é igual ao recebido
+                        if (md5Calc.equals(md5Real)){
                             System.out.println("Arquivo recebido com sucesso.");
                         }else{
                             System.out.println("A verificação de soma falhou.");

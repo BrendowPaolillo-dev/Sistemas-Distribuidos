@@ -2,10 +2,21 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 
-/**
- * UDPClient: Cliente UDP Descricao: Envia uma msg em um datagrama e recebe a
- * mesma msg do servidor
- */
+/*
+    Sistema de chat via UDP
+    Desenvolvedores: Brendow e Lucas
+
+    Classe:     Cliente
+
+    Execução:   javac UDPClient.java
+                java UDPClient
+                Digite o IP do cliente
+
+    Funcionamento:  O programa conecta o cliente ao cliente;
+                    Envia o nome do cliente para o outro;
+                    Cria uma thread de recebimento de mensagens e envio;
+
+*/
 
 
 public class UDPClient {
