@@ -35,3 +35,7 @@ class Receiver(Thread):
             msg = self.manager.set_msg(self.data)
             #envia para o gerenciador definir o que fazer com a mensagem
             self.manager.manage_msg(msg)
+
+            data = None
+            self.data = None
+            msg = None

@@ -1,3 +1,4 @@
+import socket
 
 #Define um cliente e seus atributos
 class Client:
@@ -7,3 +8,6 @@ class Client:
         self.multicast_addr = '225.1.2.3'
         self.port = 6789
         self.pvt_port = 6799
+        
+        hostname = socket.gethostname()
+        self.pvt_addr = socket.gethostbyname(hostname)
