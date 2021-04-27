@@ -5,6 +5,7 @@ from Client import Client
 from Message import Message
 from Sender import Sender
 from Receiver import Receiver
+from Receiver_pvt import Receiver_pvt
 from Listener import Listener
 
 #Classe principal que gerencia os clientes e mensagens
@@ -14,12 +15,20 @@ class Manager:
         #lista de conectados
         self.connected = []
 
+        #lista de nomes conectados
+        self.names_connected = []
+
         #instancia um cliente
         self.client = Client()
         
         #threads
+        #envio
         self.ts = None
+        #recebimento multicast
         self.tr = None
+        #recebimento privado
+        self.trp = None
+        #listener para entrada do teclado
         self.tl = None
 
     #função que inicializa a threads
@@ -28,16 +37,20 @@ class Manager:
         self.ts.start()
         self.tr = Receiver(self.client.multicast_addr, self.client.port, manager)
         self.tr.start()
+        self.trp = Receiver_pvt(manager)
+        self.trp.start()
         self.tl = Listener(manager)
         self.tl.start()
 
     #adiciona um usuário na lista de conectados
     def add_user(self, client):
         self.connected.append(client)
+        self.names_connected.append(client.nick)
 
     #remove um usuário da lista de conectados
     def pop_user(self, client):
         self.connected.remove(client)
+        self.names_connected.remove(client.nick)
 
     #imprime a lista de conectados
     def show_connected(self):
@@ -45,6 +58,8 @@ class Manager:
         for person in self.connected:
             print(person.nick)
 
+
+    #Filtra a mensagem de entrada em usuário e mensagem a ser enviada
     def filter_msg(self, data, ch = " "):
         cli = None
         index = [i for i, ltr in enumerate(data) if ltr == ch]
@@ -55,20 +70,13 @@ class Manager:
         msg = data[index[1]+1:]
         return cli, msg
 
-    def get_addr(self, name):
-        for person in self.connected:
-            if person.nick == name:
-                addr = person.pvt_addr
-                return addr
-
-    #define um objeto de mensagem
+    #define um objeto de mensagem para fazer o envio
     def set_msg(self, data):
         msg = None
         if (len(data) == 1):
             if "TO" in data[0]:
                 dst_cli, text = self.filter_msg(data[0])
-                addr = self.get_addr(dst_cli)        
-                msg = Message(4, self.client, len(text), text, addr)
+                msg = Message(4, self.client, len(text), text, dst_cli.pvt_addr)
                 if (dst_cli == self.client):
                     print(msg.message)
             elif "SHOW_ALL" in data[0]:
@@ -77,6 +85,7 @@ class Manager:
             msg = Message(data[0], data[1], data[2], data[3])
         return msg
 
+    #imprime mensagem privada
     def print_pvt(self, msg):
         print ("Mensagem de " + msg.source.nick + ": " + msg.message)
 
@@ -90,7 +99,7 @@ class Manager:
             if (msg.source.nick == self.client.nick):
                 
                 #se o cliente não está na lista de conectados
-                if (self.client not in self.connected):
+                if (self.client.nick not in self.names_connected):
                     #cria o pacote a partir da mensagem
                     pckg = msg.get_package()
 
@@ -109,16 +118,17 @@ class Manager:
         elif(msg.type == 2 and msg.source.nick != self.client.nick):
             
             #se a fonte do join_ack não está na lista de conectados
-            if (msg.source.nick not in self.connected):
+            if (msg.source.nick not in self.names_connected):
                 self.add_user(msg.source)
+
+        #caso a mensagem for privada mas é de outra fonte
         elif (msg.type == 4 and msg.source.nick != self.client.nick):
             self.print_pvt(msg)
+
+        #caso a mensagem seja privada e seja do mesmo cliente
         elif (msg.type == 4 and msg.source.nick == self.client.nick):
-                pckg = msg.get_package()
-                self.ts.send(pckg, msg.dest)
-
-                
-
+            pckg = msg.get_package()
+            self.ts.send_pvt(pckg, msg.dest)
 
 
     #realiza o join

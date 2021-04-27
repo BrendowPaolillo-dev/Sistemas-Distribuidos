@@ -15,8 +15,7 @@ class Listener(Thread):
             data = []
             data.append(text)
             msg = self.manager.set_msg(data)
+            if (msg != None):
             #envia para o gerenciador definir o que fazer com a mensagem
-            if msg != None:
                 self.manager.manage_msg(msg)
-            msg = None
 
