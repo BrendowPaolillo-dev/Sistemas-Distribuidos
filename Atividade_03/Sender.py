@@ -16,6 +16,6 @@ class Sender(Thread):
     def send_pvt(self, data, pvt_addr):
         self.s.sendto(data, (pvt_addr, self.pvt_port)) 
 
+    # envia os dados via multicast
     def send(self, data):
-        # envia os dados via multicast
         self.s.sendto(data, (self.multicast_addr, self.port)) 

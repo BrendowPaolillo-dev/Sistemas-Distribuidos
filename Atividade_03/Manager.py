@@ -31,6 +31,9 @@ class Manager:
         #listener para entrada do teclado
         self.tl = None
 
+        #flag de controle para que não seja enviado mais que uma mensagem (type 3)
+        self.is_first_message = True
+
     #função que inicializa a threads
     def set_threads(self, manager):
         self.ts = Sender(self.client.multicast_addr, self.client.port, self.client.pvt_port)
@@ -81,6 +84,9 @@ class Manager:
                     print(msg.message)
             elif "SHOW_ALL" in data[0]:
                 self.show_connected()
+            else:
+                text = data[0]
+                msg = Message(3, self.client, len(text), text)
         else:
             msg = Message(data[0], data[1], data[2], data[3])
         return msg
@@ -114,12 +120,26 @@ class Manager:
                 
                 #envia um join_ack
                 self.join_ack()
+
         #se o join_ack não for do cliente
         elif(msg.type == 2 and msg.source.nick != self.client.nick):
             
             #se a fonte do join_ack não está na lista de conectados
             if (msg.source.nick not in self.names_connected):
                 self.add_user(msg.source)
+
+        #se a mensagem nao foi enviada por esse cliente
+        elif(msg.type == 3 and msg.source.nick != self.client.nick):
+            self.receive_message(msg)
+            
+        #se a mensagem foi enviada por esse cliente
+        elif(msg.type == 3 and msg.source.nick == self.client.nick):
+            if (self.is_first_message):
+                self.is_first_message = False
+                pckg = msg.get_package()
+                self.ts.send(pckg)
+            else:
+                self.is_first_message = True
 
         #caso a mensagem for privada mas é de outra fonte
         elif (msg.type == 4 and msg.source.nick != self.client.nick):
@@ -149,6 +169,9 @@ class Manager:
 
         #envia o pacote
         self.ts.send(pckg)
+
+    def receive_message(self, msg):
+        print("'" + msg.source.nick + "': " + msg.message)
 
     #conecta o cliente
     def connect(self):

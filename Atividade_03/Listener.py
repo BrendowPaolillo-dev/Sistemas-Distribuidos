@@ -18,4 +18,5 @@ class Listener(Thread):
             if (msg != None):
             #envia para o gerenciador definir o que fazer com a mensagem
                 self.manager.manage_msg(msg)
+                msg = None
 
