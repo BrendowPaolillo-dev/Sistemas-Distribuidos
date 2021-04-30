@@ -1,6 +1,14 @@
 from threading import Thread
 import socket
 
+"""
+    Chat Multicast e privado
+    Desenvolvedores: Brendow e Lucas
+
+    Classe:     Sender
+
+    Funcionamento:  Thread que realiza o envio dos pacotes
+"""
 
 class Sender(Thread):
     #método construtor
@@ -20,7 +28,10 @@ class Sender(Thread):
 
     # envia os dados via multicast
     def send(self, data):
-        self.s.sendto(data, (self.multicast_addr, self.port)) 
+        self.s.sendto(data, (self.multicast_addr, self.port))
+    
+    def close(self):
+        self.s.close() 
 
     def run(self):
         while True:

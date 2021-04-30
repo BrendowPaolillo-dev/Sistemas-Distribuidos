@@ -7,6 +7,19 @@ from Sender import Sender
 from Receiver import Receiver
 from Receiver_pvt import Receiver_pvt
 from Listener import Listener
+import os
+
+"""
+    Chat Multicast e privado
+    Desenvolvedores: Brendow e Lucas
+
+    Classe:     Manager
+
+    Execução:   python3 Manager.py
+
+    Funcionamento:  Realiza o gerenciamento (conexão, adição e remoção) dos clientes e mensagens
+                    Definindo quais funções devem ser aplicadas à mensagem recebida ou à ser enviada
+"""
 
 #Classe principal que gerencia os clientes e mensagens
 class Manager:
@@ -45,6 +58,12 @@ class Manager:
         self.tl = Listener(manager)
         self.tl.start()
 
+    #fecha a conexão com os sockets
+    def stop_threads(self):
+        self.ts.close()
+        self.tr.close()
+        self.trp.close()
+
     #adiciona um usuário na lista de conectados
     def add_user(self, client):
         self.connected.append(client)
@@ -55,13 +74,17 @@ class Manager:
         if (client in self.connected):
             self.connected.remove(client)
         self.names_connected.remove(client.nick)
-        print("Usuário", client.nick, "saiu do chat")
+        print("------------------------------")
+        print(client.nick, "saiu do chat")
+        print("------------------------------")
 
     #imprime a lista de conectados
     def show_connected(self):
+        print("------------------------------")
         print("Lista de Conectados:")
         for person in self.connected:
             print(person.nick)
+        print("------------------------------")
 
 
     #Filtra a mensagem de entrada em usuário e mensagem a ser enviada
@@ -84,6 +107,8 @@ class Manager:
                 msg = Message(4, self.client, len(text), text, dst_cli.pvt_addr)
                 if (dst_cli == self.client):
                     print(msg.message)
+            elif "COMMANDS" in data[0]:
+                self.show_commands()
             elif "SHOW_ALL" in data[0]:
                 self.show_connected()
             elif "LEAVE" in data[0]:
@@ -97,7 +122,9 @@ class Manager:
 
     #imprime mensagem privada
     def print_pvt(self, msg):
-        print ("Mensagem de " + msg.source.nick + ": " + msg.message)
+        print("------------------------------")
+        print ("Mensagem privada de " + msg.source.nick + ": " + msg.message)
+        print("------------------------------")
 
     #gerencia a mensagem
     def manage_msg(self, msg):
@@ -120,8 +147,9 @@ class Manager:
             else:
                 #adiciona a fonte da mensagem na lista de conectados
                 self.add_user(msg.source)
+                print("------------------------------")
                 print(msg.source.nick, "entrou no chat.")
-                
+                print("------------------------------")
                 #envia um join_ack
                 self.join_ack()
 
@@ -134,7 +162,6 @@ class Manager:
 
         #se a mensagem nao foi enviada por esse cliente
         elif(msg.type == 3 and msg.source.nick != self.client.nick):
-            print('entrou no elif com type 3')
             self.receive_message(msg)
             
         #se a mensagem foi enviada por esse cliente
@@ -155,15 +182,29 @@ class Manager:
             pckg = msg.get_package()
             self.ts.send_pvt(pckg, msg.dest)
 
+        #remove o cliente que saiu da lista
         elif (msg.type == 5 and msg.source.nick != self.client.nick):
             self.pop_user(msg.source)
 
+        #finaliza a conexão do cliente
         elif (msg.type == 5 and msg.source.nick == self.client.nick):
             pckg = msg.get_package()
             self.ts.send(pckg)
             self.ts.stop = True
+            print("------------------------------")
             print("Conexão encerrada.")
+            print("------------------------------")
+            self.stop_threads()
+            os._exit(0)
 
+    #imprime os comandos do chat na tela
+    def show_commands(self):
+        print("------------------------------")
+        print("Lista de comandos:")
+        print("TO nomedousuario mensagem : Comando para enviar mensagens privadas.")
+        print("SHOW_ALL : Mostra o nome de todos usuários conectados.")
+        print("LEAVE : Sai do chat")
+        print("------------------------------")
 
     #realiza o join
     def join(self, pckg):
@@ -171,7 +212,9 @@ class Manager:
         self.ts.send(pckg)
         #adiciona o cliente na lista de conectados
         self.add_user(self.client)
-        print ("Olá", self.client.nick, "você foi conectado")
+        print ("Olá " + self.client.nick + " você foi conectado")
+        print("Digite COMMANDS para ver os comandos")
+        print("------------------------------")
 
     #realiza o join_ack
     def join_ack(self):
@@ -185,7 +228,7 @@ class Manager:
         self.ts.send(pckg)
 
     def receive_message(self, msg):
-        print("'" + msg.source.nick + "': " + msg.message)
+        print(msg.source.nick + " disse a todos: " + msg.message)
 
     #conecta o cliente
     def connect(self):

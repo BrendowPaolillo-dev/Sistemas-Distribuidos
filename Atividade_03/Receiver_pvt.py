@@ -4,6 +4,14 @@ import struct
 import pickle
 import time
 
+"""
+    Chat Multicast e privado
+    Desenvolvedores: Brendow e Lucas
+
+    Classe:     Receiver_pvt
+
+    Funcionamento:  Thread que recebe as mensagens privadas
+"""
 
 class Receiver_pvt(Thread):
     #método construtor
@@ -18,6 +26,9 @@ class Receiver_pvt(Thread):
 
     def run(self):
         self.receive()
+
+    def close(self):
+        self.s.close()
 
     #recebe a mensagem do privado
     def receive(self):

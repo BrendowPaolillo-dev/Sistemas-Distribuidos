@@ -1,6 +1,13 @@
 from threading import Thread
 import socket
+"""
+    Chat Multicast e privado
+    Desenvolvedores: Brendow e Lucas
 
+    Classe:     Listener
+
+    Funcionamento:  Thread que ouve a entrada de texto do cliente
+"""
 
 class Listener(Thread):
     #método construtor
@@ -9,6 +16,7 @@ class Listener(Thread):
         Thread.__init__(self)
         self.manager = manager     
 
+    #ouve a entrada do teclado do usuário
     def run(self):
         while True:
             text = input()

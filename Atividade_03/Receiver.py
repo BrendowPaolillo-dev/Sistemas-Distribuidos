@@ -4,6 +4,14 @@ import struct
 import pickle
 import time
 
+"""
+    Chat Multicast e privado
+    Desenvolvedores: Brendow e Lucas
+
+    Classe:     Receiver
+
+    Funcionamento:  Thread que recebe as mensagens multicasts
+"""
 
 class Receiver(Thread):
     #método construtor
@@ -18,28 +26,32 @@ class Receiver(Thread):
         self.s.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
         self.manager = manager
+        self.stopped = False
 
     def run(self):
-        self.receive()
+        while self.stopped != True:
+            self.receive()
+
+    #encerra a conexão do socket
+    def close(self):
+        self.s.close()
+        self.stopped = True
 
     #recebe a mensagem do multicast
     def receive(self):
-        while True:
-            #recebe os dados em bytes
-            data, address = self.s.recvfrom(1024)
-            #espera um tempo para sincronizar as funções do programa
-            time.sleep(1/10)
-            #realiza o unmarshalling 
-            self.data = pickle.loads(data)
-            #seta o vetor de dados como uma mensagem
-            msg = self.manager.set_msg(self.data)
-            #envia para o gerenciador definir o que fazer com a mensagem
+        
+        #recebe os dados em bytes
+        data, address = self.s.recvfrom(1024)
+        #espera um tempo para sincronizar as funções do programa
+        time.sleep(1/10)
+        #realiza o unmarshalling 
+        self.data = pickle.loads(data)
+        #seta o vetor de dados como uma mensagem
+        msg = self.manager.set_msg(self.data)
+        #envia para o gerenciador definir o que fazer com a mensagem
 
-            self.manager.manage_msg(msg)
+        self.manager.manage_msg(msg)
 
-            if (msg.type == 5):
-                break
-
-            data = None
-            self.data = None
-            msg = None
+        data = None
+        self.data = None
+        msg = None
