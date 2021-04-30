@@ -52,8 +52,10 @@ class Manager:
 
     #remove um usuário da lista de conectados
     def pop_user(self, client):
-        self.connected.remove(client)
+        if (client in self.connected):
+            self.connected.remove(client)
         self.names_connected.remove(client.nick)
+        print("Usuário", client.nick, "saiu do chat")
 
     #imprime a lista de conectados
     def show_connected(self):
@@ -84,6 +86,8 @@ class Manager:
                     print(msg.message)
             elif "SHOW_ALL" in data[0]:
                 self.show_connected()
+            elif "LEAVE" in data[0]:
+                msg = Message(5, self.client, len(""), "")
             else:
                 text = data[0]
                 msg = Message(3, self.client, len(text), text)
@@ -130,6 +134,7 @@ class Manager:
 
         #se a mensagem nao foi enviada por esse cliente
         elif(msg.type == 3 and msg.source.nick != self.client.nick):
+            print('entrou no elif com type 3')
             self.receive_message(msg)
             
         #se a mensagem foi enviada por esse cliente
@@ -149,6 +154,15 @@ class Manager:
         elif (msg.type == 4 and msg.source.nick == self.client.nick):
             pckg = msg.get_package()
             self.ts.send_pvt(pckg, msg.dest)
+
+        elif (msg.type == 5 and msg.source.nick != self.client.nick):
+            self.pop_user(msg.source)
+
+        elif (msg.type == 5 and msg.source.nick == self.client.nick):
+            pckg = msg.get_package()
+            self.ts.send(pckg)
+            self.ts.stop = True
+            print("Conexão encerrada.")
 
 
     #realiza o join

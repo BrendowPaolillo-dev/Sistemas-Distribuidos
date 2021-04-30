@@ -12,6 +12,8 @@ class Sender(Thread):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 20)
 
+        self.stop = False
+
     #envia mensagem no privado
     def send_pvt(self, data, pvt_addr):
         self.s.sendto(data, (pvt_addr, self.pvt_port)) 
@@ -19,3 +21,8 @@ class Sender(Thread):
     # envia os dados via multicast
     def send(self, data):
         self.s.sendto(data, (self.multicast_addr, self.port)) 
+
+    def run(self):
+        while True:
+            if (self.stop):
+                break

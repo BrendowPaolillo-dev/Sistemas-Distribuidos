@@ -34,7 +34,11 @@ class Receiver(Thread):
             #seta o vetor de dados como uma mensagem
             msg = self.manager.set_msg(self.data)
             #envia para o gerenciador definir o que fazer com a mensagem
+
             self.manager.manage_msg(msg)
+
+            if (msg.type == 5):
+                break
 
             data = None
             self.data = None
