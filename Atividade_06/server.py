@@ -2,9 +2,9 @@
     Gerenciador de notas RMI
     Desenvolvedores: Brendow e Lucas
 
-    Classe:     Client
+    Classe:     Server
 
-    Funcionamento:  Realiza a execução do código da máquina cliente
+    Funcionamento:  Realiza a execução do código da máquina servidora
 """
 
 import Pyro4
